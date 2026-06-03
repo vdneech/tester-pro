@@ -1,0 +1,126 @@
+{% extends 'base.html' %}
+
+{% block title %}Тест успешно создан — Конструктор Тестов{% endblock %}
+{% block header_title %}Ссылка готова!{% endblock %}
+{% block header_desc %}Импорт завершен. Скопируйте постоянный URL для отправки студентам.{% endblock %}
+
+{% block extra_style %}
+<style>
+    .success-card {
+        border-top: 3px solid var(--primary); /* Деликатный цветовой акцент состояния вместо тяжелого фона */
+    }
+
+    .test-info-meta {
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--text-main);
+        margin-bottom: 6px;
+    }
+
+    .share-box {
+        display: flex;
+        gap: 6px;
+        margin: 16px 0;
+        align-items: center;
+    }
+
+    .url-input {
+        flex: 1;
+        padding: 8px 12px;
+        border: 1px solid var(--border-main);
+        border-radius: var(--radius-sm);
+        background: var(--bg-muted);
+        color: var(--text-main);
+        font-family: monospace;
+        font-size: 12px;
+        outline: none;
+        height: 34px;
+        text-overflow: ellipsis;
+    }
+
+    .btn-icon-only {
+        width: 34px;
+        height: 34px;
+        padding: 0;
+        flex-shrink: 0;
+        border-radius: var(--radius-sm);
+    }
+
+    /* Динамический класс для состояния копирования */
+    .btn-success-status {
+        background-color: var(--primary-bg) !important;
+        border-color: var(--primary) !important;
+        color: var(--primary) !important;
+    }
+
+    .footer-actions {
+        display: flex;
+        gap: 8px;
+        margin-top: 20px;
+        border-top: 1px solid var(--border-main);
+        padding-top: 16px;
+    }
+
+    @media (max-width: 640px) {
+        .footer-actions {
+            flex-direction: column;
+        }
+        .footer-actions .btn {
+            width: 100%;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="component-card success-card">
+
+
+    <div class="test-info-meta">
+        <span style="color: var(--text-muted); font-weight: 400;"></span> {{ test_suite.title }}
+        <span class="group-tag group-tag-active" style="background-color: {{ test_suite.group_color }}; color: {{ test_suite.group_border_color }}">{{ test_suite.group }}</span>
+    </div>
+
+    <p class="desc">Авторизация для прохождения тестирования не требуется. Ссылка является постоянной.</p>
+
+    <div class="share-box">
+        <input type="text" id="shareUrl" class="url-input" value="{{ full_url }}" readonly>
+        <button class="btn btn-primary btn-icon-only" id="copyBtn" onclick="copyLink()" title="Скопировать ссылку">
+            <i data-lucide="copy" style="width: 14px; height: 14px;"></i>
+        </button>
+    </div>
+
+    <div class="footer-actions">
+        <a href="{{ full_url }}" class="btn btn-outline" style="border-color: var(--primary); color: var(--primary);">
+            Перейти к прохождению <i data-lucide="arrow-right" style="width: 14px; height: 14px;"></i>
+        </a>
+        <a href="{% url 'uploader:test_list' %}" class="btn btn-outline" style="color: var(--text-muted);">
+            К списку всех тестов
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_script %}
+<script>
+function copyLink() {
+    const copyText = document.getElementById("shareUrl");
+    copyText.select();
+    copyText.setSelectionRange(0, 99999);
+    navigator.clipboard.writeText(copyText.value);
+
+    const btn = document.getElementById("copyBtn");
+
+    // Плавное переключение в Drinkit/Gemini стиле без грубой смены цвета на агрессивный красный/зеленый
+    btn.innerHTML = '<i data-lucide="check" style="width: 14px; height: 14px;"></i>';
+    btn.classList.add('btn-success-status');
+    lucide.createIcons();
+
+    setTimeout(() => {
+        btn.innerHTML = '<i data-lucide="copy" style="width: 14px; height: 14px;"></i>';
+        btn.classList.remove('btn-success-status');
+        lucide.createIcons();
+    }, 2000);
+}
+</script>
+{% endblock %}

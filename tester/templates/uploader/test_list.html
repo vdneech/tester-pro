@@ -1,0 +1,192 @@
+{% extends 'base.html' %}
+
+{% block title %}Список тестов{% endblock %}
+{% block header_title %}Доступные тесты{% endblock %}
+{% block header_desc %}Просмотр загруженных ранее тестов.{% endblock %}
+
+{% block extra_style %}
+
+@media (max-width: 540px) {
+    /* Фикс контейнера промпта — убираем нижний паддинг, чтобы кнопка прижалась в самый низ */
+    .prompt-box {
+        padding-bottom: 0 !important;
+        display: flex;
+        flex-direction: column;
+    }
+
+    /* Переносим кнопку вниз и растягиваем на всю ширину */
+    .prompt-header {
+        flex-direction: row; /* Возвращаем строку для иконки и заголовка */
+        align-items: center;
+        padding: 12px;
+        border-bottom: 1px solid var(--border-main);
+    }
+
+    /* Превращаем кнопку копирования в полноценный подвал карточки */
+    .btn-copy-prompt {
+        order: 3; /* Спускаем в самый конец флекс-контейнера .prompt-box */
+        width: 100% !important;
+        height: 42px;
+        justify-content: center;
+        border: none !important;
+        border-top: 1px solid var(--border-main) !important;
+        border-radius: 0 0 var(--radius-md) var(--radius-md) !important; /* Скругления только снизу */
+        background: var(--bg-muted);
+        margin: 0 !important;
+    }
+
+    /* Дополнительный фикс для кнопки запуска основного плеера, если она тоже в карточке */
+    #startTestBtn {
+        width: 100% !important;
+        height: 42px;
+        margin-top: 16px !important;
+        border-radius: var(--radius-sm) !important;
+    }
+}
+/* Стили поисковой строки */
+.search-container {
+    position: relative;
+    margin-bottom: 24px;
+}
+.search-input {
+    width: 100%;
+    padding: 14px 16px 14px 46px;
+    font-size: 15px;
+    border: 1px solid var(--border-main);
+    border-radius: var(--radius-md);
+    background-color: var(--bg-container);
+    color: var(--text-main);
+    outline: none;
+    transition: var(--transition-fast);
+}
+.search-input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--primary-bg);
+}
+.search-icon-inside {
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    pointer-events: none;
+}
+
+/* Сетка элементов */
+.test-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 16px;
+}
+
+.test-row-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    background-color: var(--bg-container);
+    border: 1px solid var(--border-main);
+    border-radius: var(--radius-md);
+    transition: var(--transition-fast);
+    gap: 16px;
+}
+.test-row-card:hover {
+    border-color: var(--border-hover);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-sm);
+}
+
+@media (max-width: 540px) {
+    .test-row-card {
+        flex-direction: column;   /* Выстраиваем элементы вертикально (в столбец) */
+        align-items: stretch;     /* Растягиваем внутренние элементы по всей ширине */
+        padding: 14px 16px;       /* Немного сжимаем паддинги для экономии экрана */
+        gap: 12px;                /* Уменьшаем расстояние между элементами */
+    }
+
+    /* Если внутри карточки есть кнопка действия, она станет аккуратной мобильной кнопкой */
+    .test-row-card .btn,
+    .test-row-card button,
+    .test-row-card a.btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+.mini-counter{
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 5px;
+}
+
+.test-meta-info {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.test-card-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-main);
+}
+.test-card-details {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
+.empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-muted);
+}
+{% endblock %}
+
+{% block content %}
+<div class="component-card">
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
+        <h3 style="margin: 0;">Архив тестов</h3>
+    </div>
+
+    <form method="GET" action="" class="search-container">
+        <i data-lucide="search" class="search-icon-inside" stroke-width="2"></i>
+        <input type="text" name="q" value="{{ query|default:'' }}" class="search-input" placeholder="Поиск по названию теста или группе..." autocomplete="off">
+    </form>
+
+    <div class="test-grid">
+        {% for suite in test_suites %}
+        <div class="test-row-card">
+            <div class="test-meta-info">
+                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                    <span class="test-card-title">{{ suite.title }}</span>
+                    
+                    {% if suite.group %}
+                    <span class="group-tag group-tag-active" style="background-color: {{ suite.group_color }}; color: {{ suite.group_border_color }}">{{ suite.group }}</span>
+                    {% elif suite.group_tag %}
+                    <span class="group-tag group-tag-active">{{ suite.group_tag }}</span>
+                    {% endif %}
+                </div>
+                
+                <div class="test-card-details">
+                    <span class="mini-counter"><i data-lucide="help-circle" style="width: 14px; height: 14px; display: inline; vertical-align: middle;" stroke-width="2"></i> {{ suite.questions.count }}</span>
+                    <span class="mini-counter"><i data-lucide="eye" style="width: 14px; height: 14px; display: inline; vertical-align: middle;" stroke-width="2"></i> {{ suite.views }}</span>
+                    <span>Загружен {{ suite.created_at|date:"d.m.Y  " }}</span>
+                </div>
+            </div>
+
+            <a href="{% url 'quizzes:run_test' suite.slug %}" class="btn btn-primary" style="padding: 10px 16px; font-size: 13px; text-decoration: none; white-space: nowrap;">
+                Запустить <i data-lucide="play" stroke-width="2.5" style="width: 14px; height: 14px;"></i>
+            </a>
+        </div>
+        {% empty %}
+        <div class="empty-state">
+            <i data-lucide="folder-open" style="width: 48px; height: 48px; margin-bottom: 12px; opacity: 0.5;"></i>
+            <p style="font-size: 15px; margin: 0;">Ничего не найдено по данному запросу.</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

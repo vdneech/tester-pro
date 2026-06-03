@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+
+{% block title %}Страница не найдена — Конструктор Тестов{% endblock %}
+
+{% block header_title %}Непредвиденная ошибка.. Никому не говорите об этом.{% endblock %}
+{% block header_desc %}Похоже, этой страницы больше не существует{% endblock %}
+
+{% block content %}
+<div class="component-card" style="text-align: center; padding: 48px 24px;">
+    <div style="margin-bottom: 24px; color: var(--primary); display: flex; gap: 12px; justify-content: center; align-items: center">
+        <i data-lucide="alert-triangle" style="width: 48px; height: 48px; stroke-width: 1.5;"></i>
+    </div>
+    
+    <h3 style="margin-bottom: 12px;">Ошибка сервера</h3>
+    <p style="color: var(--text-muted); margin-bottom: 32px; max-width: 400px; margin-left: auto; margin-right: auto;">
+        Произошла серверная ошибка, из-за которой открыть данный ресурс не получился.
+    </p>
+
+    <div style="display: flex; gap: 12px; justify-content: center;">
+        <a href="{% url 'uploader:upload_test' %}" class="btn btn-primary">
+            <i data-lucide="home" style="width: 16px; height: 16px;"></i>
+            На главную
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_script %}
+<script>
+    // Принудительно вызываем обновление иконок для новых элементов
+    lucide.createIcons();
+</script>
+{% endblock %}

@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{% extends 'base.html' %}
+
+{% block title %}Загрузка нового теста{% endblock %}
+{% block header_title %}Загрузка конфигурации{% endblock %}
+{% block header_desc %}Поддерживаются файлы формата .json или структурные архивы .zip{% endblock %}
+
+{% block extra_style %}
+.form-group { margin-bottom: 20px; }
+.form-label { display: block; font-size: 14px; font-weight: 500; margin-bottom: 6px; }
+.form-control { 
+    width: 100%; padding: 12px; font-size: 14px; border: 1px solid var(--border-main); 
+    border-radius: var(--radius-md); background-color: var(--bg-container); color: var(--text-main); 
+    outline: none; transition: var(--transition-fast); 
+}
+.form-control:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-bg); }
+{% endblock %}
+
+{% block content %}
+<div class="component-card">
+    <h2>Выберите файл теста</h2>
+    
+    {% if error %}
+    <div class="alert alert-danger">
+        <i data-lucide="alert-octagon"></i>
+        <div><strong>Ошибка парсинга:</strong> {{ error }}</div>
+    </div>
+    {% endif %}
+
+    <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="form-group">
+            <label class="form-label" for="test_file">Файл (.json / .zip)</label>
+            <input type="file" id="test_file" name="test_file" class="form-control" accept=".json,.zip" required>
+        </div>
+        <button type="submit" class="btn btn-primary">
+            <i data-lucide="upload"></i> Сгенерировать ссылку
+        </button>
+    </form>
+</div>
+{% endblock %}</title>
+</head>
+<body>
+
+</body>
+</html>

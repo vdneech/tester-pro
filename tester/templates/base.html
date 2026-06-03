@@ -1,0 +1,485 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta property="og:site_name" content="Тестер Про">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="{% block og_title %}Тест-кабинет{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}Удобный сервис для прохождения и создания тестов КГТК.{% endblock %}">
+    <meta property="og:image" content="{% static 'img/og-preview.png' %}">
+    <meta property="og:url" content="{{ request.build_absolute_uri }}">
+    <meta name="twitter:card" content="summary_large_image">
+
+
+    <link rel="icon" type="image/svg+xml" href="{% static 'img/logo.svg' %}">
+
+    {% block seo %}{% endblock %}
+
+    <title>{% block title %}Конструктор Тестов{% endblock %}</title>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        :root {
+            --bg-main: #f8fafc;
+            --bg-container: #ffffff;
+            --bg-muted: #f1f5f9;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --border-main: #e2e8f0;
+            --border-hover: #cbd5e1;
+
+            --primary: #10b981;
+            --primary-hover: #059669;
+            --primary-bg: #e2fbe9;
+
+            --blue: rgba(60, 118, 238, 0.22); /* Аналог --primary (базовый синий) */
+            --blue-hover: #3c76ee; /* Аналог --primary-hover (темнее для наведения) */
+            --blue-bg: #eff6ff; /* Аналог --primary-bg (очень светлый нежный фон) */
+
+            --success: #10b981;
+            --success-bg: #d1fae5;
+            --danger: #ef4444;
+            --danger-bg: #fee2e2;
+
+            --radius-sm: 6px;
+            --radius-md: 10px;
+            --radius-lg: 16px;
+            --radius-full: 9999px;
+
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.02);
+            --shadow-md: 0 4px 12px -2px rgba(15, 23, 42, 0.04);
+        }
+
+        body.dark-mode {
+            --bg-main: #090d16;
+            --bg-container: #131c2e;
+            --bg-muted: #1b263b;
+            --text-main: #f1f5f9;
+            --text-muted: #64748b;
+            --border-main: #222f47;
+            --border-hover: #2e3f5e;
+
+            --primary: #10b981;
+            --primary-hover: #34d399;
+            --primary-bg: rgba(16, 185, 129, 0.12);
+
+            --success: #34d399;
+            --success-bg: rgba(16, 185, 129, 0.1);
+            --danger: #f87171;
+            --danger-bg: rgba(239, 68, 68, 0.1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            -webkit-font-smoothing: antialiased;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 720px; /* Сделали более сфокусированным, как в Gemini */
+            margin: 0 auto;
+            padding: 40px 20px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            display: flex;
+            flex-direction: column;
+        }
+
+        h1 {
+            font-size: 20px;
+            font-weight: 600;
+            letter-spacing: -0.02em;
+            padding-bottom: 5px;
+        }
+
+
+        /* Изящные кнопки в стиле Drinkit/Gemini */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 8px 14px;
+            border: 1px solid transparent;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            line-height: 1.2;
+            transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+            user-select: none;
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: #ffffff;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .btn-outline {
+            border-color: var(--border-main);
+            background-color: var(--bg-container);
+            color: var(--text-main);
+        }
+
+        .btn-outline:hover {
+            background-color: var(--bg-muted);
+            border-color: var(--border-hover);
+        }
+
+        .theme-toggle {
+            background: var(--bg-container);
+            border: 1px solid var(--border-main);
+            color: var(--text-muted);
+            width: 51px;
+            height: 41px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s ease;
+            margin: 10px;
+        }
+
+        .theme-toggle:hover {
+            color: var(--text-main);
+            border-color: var(--border-hover);
+            background: var(--bg-muted);
+        }
+
+        .component-card {
+            background-color: var(--bg-container);
+            border: 1px solid var(--border-main);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .alert {
+            padding: 12px 14px;
+            border-radius: var(--radius-sm);
+            border: 1px solid transparent;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            font-size: 13px;
+            margin-bottom: 20px;
+        }
+
+        .alert-danger {
+            background-color: var(--danger-bg);
+            border-color: rgba(239, 68, 68, 0.2);
+            color: var(--text-main);
+        }
+
+        .alert-danger i {
+            color: var(--danger);
+            width: 16px;
+            height: 16px;
+        }
+
+        /* Поля ввода */
+        .input-field {
+            width: 100%;
+            padding: 10px 12px;
+            background: var(--bg-container);
+            border: 1px solid var(--border-main);
+            border-radius: var(--radius-sm);
+            color: var(--text-main);
+            font-size: 13px;
+            transition: all 0.15s ease;
+            outline: none;
+        }
+
+        .input-field:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px var(--primary-bg);
+        }
+
+        @media (max-width: 640px) {
+            .container {
+                padding: 20px 16px;
+            }
+
+            header {
+            }
+
+            h1 {
+                font-size: 18px;
+            }
+        }
+
+        /* Прямоугольный тег группы */
+        .group-tag {
+            display: inline-flex;
+            align-items: center;
+            color: var(--text-muted);
+            padding: 2px 8px;
+            border-radius: var(--radius-sm);
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .group-tag-active {
+        }
+
+        /* Новая структура хедера */
+        .nav-container {
+            display: flex;
+            flex-direction: column; /* Вертикальный поток для всех элементов */
+            gap: 8px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border-main);
+            margin-bottom: 32px;
+        }
+
+        .header-top {
+            display: flex;
+            align-items: center; /* Выравнивание лого и заголовка по центру */
+            gap: 12px;
+        }
+
+        .nav-container .desc {
+            color: var(--text-muted);
+            font-size: 13px;
+        }
+
+        #globalThemeToggle {
+            position: fixed;
+            right: 20px;
+            bottom: 20px;
+            z-index: 999;
+        }
+
+        @media (max-width: 640px) {
+            .nav-container {
+                margin-bottom: 20px;
+            }
+
+            .header-top h1 {
+                font-size: 18px;
+            }
+        }
+
+
+        footer {
+            padding: 20px 20px;
+            text-align: center;
+
+            border-top: 1px solid var(--border-main);
+            margin-top: 20px;
+        }
+
+        .footer-content {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-muted);
+            font-size: 12px;
+        }
+
+        .footer-content i {
+            width: 14px;
+            height: 14px;
+            stroke-width: 2.5;
+        }
+
+
+        /* Исправление хедера для мобильных */
+        @media (max-width: 640px) {
+            .nav-container {
+                gap: 12px !important; /* Уменьшаем расстояние между элементами */
+                padding-bottom: 16px !important;
+                margin-bottom: 20px !important;
+            }
+
+            /* Сжимаем логотип на мобильных, чтобы он не занимал лишнее место */
+            .nav-container svg {
+                width: 60px !important;
+            }
+
+            /* Уменьшаем заголовки, чтобы они не переносились на 3 строки */
+            .nav-container h1 {
+                font-size: 16px !important;
+            }
+
+
+            /* Делаем кнопку темы чуть компактнее */
+            .theme-toggle {
+                width: 36px !important;
+                height: 36px !important;
+            }
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: var(--bg-main);
+            padding: 24px;
+            border-radius: var(--radius-lg);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            max-width: 400px;
+            width: 90%;
+            border: 1px solid var(--border-main);
+
+            h3 {
+                font-size: 16px;
+                margin-bottom: 5px;
+            }
+
+            p {
+                font-size: 13px;
+            }
+
+        }
+
+
+        .result-card {
+            padding: 24px;
+            background: var(--bg-main);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border-main);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin: 20px 0;
+        }
+
+        .stat-item {
+            padding: 16px;
+            background: var(--bg-muted);
+            border-radius: var(--radius-md);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            border: 1px solid var(--border-main);
+        }
+
+        .stat-value {
+            font-size: 20px;
+            font-weight: 700;
+            margin-top: 4px;
+        }
+
+        .result-actions {
+            margin-top: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        {% block extra_style %}{% endblock %}
+
+
+    </style>
+    <script>
+        if (localStorage.getItem('ui_kit_theme') === 'dark') {
+            document.documentElement.classList.add('dark-mode');
+            document.addEventListener("DOMContentLoaded", () => document.body.classList.add('dark-mode'));
+        }
+    </script>
+</head>
+<body>
+<div class="container">
+    <header>
+        <div class="nav-container">
+            <div class="header-top">
+                <a href="{% url 'uploader:upload_test' %}" class="logo-link">
+                    <svg width="70" viewBox="0 0 62 35" fill="none" xmlns="http://www.w3.org/2000/svg">
+
+                        <path d="M14.0466 11.179L8.57161 21.8813C8.32522 22.3512 8.27556 22.8997 8.43357 23.4061C8.59158 23.9126 8.94431 24.3356 9.41417 24.5819C9.88402 24.8283 10.4325 24.878 10.939 24.72C11.4454 24.562 11.8684 24.2092 12.1148 23.7394L17.5898 13.0371C18.0825 12.0976 18.1818 11.0008 17.8658 9.98803C17.5499 8.97528 16.8445 8.12952 15.905 7.63682C14.9655 7.14412 13.8687 7.04483 12.8559 7.36079C11.8432 7.67676 10.9974 8.38209 10.5047 9.32163L5.05268 19.9801C4.67914 20.6785 4.44757 21.444 4.37135 22.2324C4.29512 23.0207 4.37574 23.8164 4.60855 24.5734C4.84136 25.3305 5.22176 26.0339 5.7278 26.6433C6.23385 27.2526 6.85552 27.7556 7.55696 28.1235C8.25841 28.4913 9.02574 28.7166 9.8147 28.7865C10.6037 28.8563 11.3986 28.7692 12.1538 28.5302C12.9089 28.2912 13.6092 27.9051 14.2144 27.3941C14.8196 26.8831 15.3176 26.2574 15.6797 25.553C15.6797 25.553 18.7718 18.9305 21.1317 14.8945L25 7.36079L25 29.5"
+
+                              stroke="#059669" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+
+                        <path d="M35 7C36.5173 7 37.9741 7.809 39.0977 9.63867C40.2359 11.4923 41 14.3644 41 18.293C41 22.2241 40.2345 24.9325 39.1152 26.626C38.0214 28.2808 36.5755 29 35 29C33.4245 29 31.9786 28.2808 30.8848 26.626C29.7655 24.9325 29 22.2241 29 18.293C29 14.3644 29.7641 11.4923 30.9023 9.63867C32.0259 7.809 33.4827 7 35 7Z"
+
+                              stroke="#059669" stroke-width="2"/>
+
+                        <path d="M50 7C51.5173 7 52.9741 7.809 54.0977 9.63867C55.2359 11.4923 56 14.3644 56 18.293C56 22.2241 55.2345 24.9325 54.1152 26.626C53.0214 28.2808 51.5755 29 50 29C48.4245 29 46.9786 28.2808 45.8848 26.626C44.7655 24.9325 44 22.2241 44 18.293C44 14.3644 44.7641 11.4923 45.9023 9.63867C47.0259 7.809 48.4827 7 50 7Z"
+
+                              stroke="#059669" stroke-width="2"/>
+
+                    </svg>
+                </a>
+                <h1>{% block header_title %}Тестирующая Система{% endblock %}</h1>
+            </div>
+
+            <p class="desc">{% block header_desc %}Студенческий клиент-сервис{% endblock %}</p>
+
+            <button class="theme-toggle" id="globalThemeToggle">
+                <i data-lucide="moon" style="width:16px; height:16px;"></i>
+            </button>
+        </div>
+    </header>
+
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer>
+        <div class="footer-content">
+            <span style="display: flex; align-items: center; gap: 5px">Владислав Белов, – ни одни права не защищены <i
+                    data-lucide="ban" style="width: 16px"></i></span>
+        </div>
+    </footer>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        lucide.createIcons();
+        const isDark = document.body.classList.contains('dark-mode');
+        updateThemeButtonIcon(isDark);
+    });
+
+    const themeToggleBtn = document.getElementById('globalThemeToggle');
+    themeToggleBtn.addEventListener('click', () => {
+        document.body.classList.toggle('dark-mode');
+        const isDark = document.body.classList.contains('dark-mode');
+        localStorage.setItem('ui_kit_theme', isDark ? 'dark' : 'light');
+        updateThemeButtonIcon(isDark);
+    });
+
+    function updateThemeButtonIcon(isDark) {
+        themeToggleBtn.innerHTML = isDark ? '<i data-lucide="sun" style="width:16px; height:16px;"></i>' : '<i data-lucide="moon" style="width:16px; height:16px;"></i>';
+        lucide.createIcons();
+    }
+</script>
+{% block extra_script %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,429 @@
+{% extends 'base.html' %}
+
+{% block title %}Тест-кабинет{% endblock %}
+{% block header_title %}Тестер <span class="badge badge-primary">Про</span> – подготовка к тест-кабинету КГТК{% endblock %}
+{% block header_desc %}Поддерживаются файлы в формате .json или готовые структурные архивы .zip с
+    медиа-ресурсами.{% endblock %}
+
+{% block extra_style %}
+    /* Интерактивная зона Drag and Drop */
+
+    .badge-primary { background-color: var(--primary-bg); color: var(--primary); }
+    .badge {
+    display: inline-flex;
+    padding: 4px 8px;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    }
+    .drop-zone {
+    border: 2px dashed var(--border-main);
+    border-radius: var(--radius-lg);
+    padding: 40px 20px;
+    text-align: center;
+    background-color: var(--bg-muted);
+    cursor: pointer;
+    transition: var(--transition-fast);
+    position: relative;
+    margin-bottom: 24px;
+    }
+    .drop-zone:hover, .drop-zone.drag-over {
+    border-color: var(--primary);
+    background-color: var(--primary-bg);
+    }
+    .drop-zone input[type="file"] {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    opacity: 0;
+    cursor: pointer;
+    }
+    .drop-zone-icon {
+    width: 48px;
+    height: 48px;
+    color: var(--primary);
+    margin-bottom: 12px;
+    transition: transform 0.2s ease;
+    }
+    .drop-zone:hover .drop-zone-icon {
+    transform: translateY(-4px);
+    }
+    .file-info-text {
+    font-size: 14px;
+    color: var(--text-muted);
+    margin-top: 8px;
+    }
+    .selected-file-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--bg-container);
+    border: 1px solid var(--primary);
+    padding: 6px 14px;
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-main);
+    margin-top: 8px;
+    }
+
+    /* Блок возврата к последнему тесту */
+    .history-box {
+    display: none; /* Включается через JS при наличии записи */
+    align-items: center;
+    justify-content: space-between;
+    background-color: var(--primary-bg);
+    border: 1px solid var(--primary);
+    border-radius: var(--radius-md);
+    padding: 14px 18px;
+    margin-bottom: 24px;
+    animation: fadeIn 0.3s ease-in-out;
+    }
+    .history-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: var(--text-main);
+    }
+    .history-title {
+    font-weight: 600;
+    font-size: 14px;
+    }
+
+    /* Карточка памятки */
+    .instruction-box {
+    background-color: var(--bg-muted);
+    border: 1px solid var(--border-main);
+    border-radius: var(--radius-md);
+    padding: 18px;
+    margin-top: 30px;
+    }
+    .instruction-box h4 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 10px;
+    color: var(--text-main);
+    }
+    .instruction-box ul {
+    padding-left: 20px;
+    margin: 0;
+    }
+    .instruction-box li {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+    }
+    .instruction-box code {
+    background: var(--bg-container);
+    padding: 2px 6px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-main);
+    font-family: monospace;
+    }
+
+    @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-4px); }
+    to { opacity: 1; transform: translateY(0); }
+    }
+{% endblock %}
+
+{% block content %}
+    <div class="component-card">
+
+        <div id="lastQuizBox" class="history-box">
+            <div class="history-info">
+
+                <div>
+                    <div style="font-size: 12px; color: var(--text-muted);">Вы остановились на:</div>
+                    <div id="lastQuizTitle" class="history-title">Название теста</div>
+                </div>
+            </div>
+            <a id="lastQuizLink" href="#" class="btn btn-primary" style="padding: 8px 15px; font-size: 11px;">
+                <i data-lucide="square-arrow-right-enter" style="width: 20px"></i>
+            </a>
+        </div>
+
+
+        {% if error %}
+            <div class="alert alert-danger" style="margin-bottom: 20px;">
+                <i data-lucide="file-exclamation-point"></i>
+                <div><strong>Ошибка парсинга</strong> – проверьте структуру документа</div>
+            </div>
+        {% endif %}
+
+        <form method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            <div class="drop-zone" id="dropZone">
+                <i data-lucide="upload-cloud" class="drop-zone-icon" stroke-width="2"></i>
+                <div id="dropZonePrompt">
+                    <p style="font-size: 16px; font-weight: 500; margin-bottom: 4px;">
+                        Перетащите файл сюда или <span style="color: var(--primary); text-decoration: underline;">выберите на компьютере</span>
+                    </p>
+                    <p class="file-info-text">Доступные форматы: .json, .zip пакетом</p>
+                </div>
+                <input type="file" id="test_file" name="test_file" accept=".json,.zip" required>
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center; padding: 14px;">
+                Создать тест и ссылку
+            </button>
+            <a href="{% url 'uploader:test_list' %}" class="btn btn-outline"
+               style="width: 100%; justify-content: center; padding: 14px; text-decoration: none; margin-top: 10px; color: var(--text-muted);">
+                Найти существующий тест
+            </a>
+        </form>
+
+        <style>
+            .prompt-box {
+                margin-top: 16px;
+                border: 1px solid var(--border-main);
+                border-radius: var(--radius-md);
+                background: var(--bg-container);
+                overflow: hidden;
+            }
+
+            .prompt-header {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding: 10px 14px;
+                background: var(--bg-muted);
+                border-bottom: 1px solid var(--border-main);
+            }
+
+            .prompt-title {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                font-size: 13px;
+                font-weight: 600;
+                color: var(--text-main);
+            }
+
+            .prompt-body {
+                position: relative;
+                padding: 12px;
+                background: var(--bg-main);
+            }
+
+            .prompt-pre {
+                margin: 0;
+                font-family: monospace;
+                font-size: 12px;
+                line-height: 1.5;
+                color: var(--text-main);
+                white-space: pre-wrap;
+                word-break: break-all;
+                max-height: 500px;
+                overflow-y: auto;
+            }
+
+            .btn-copy-prompt {
+                padding: 6px 12px;
+                font-size: 12px;
+                height: 28px;
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+            }
+        </style>
+
+
+        <div class="instruction-box">
+            <h4><i data-lucide="info" style="color: var(--primary); width: 18px; height: 18px;"></i> Структура
+                документов</h4>
+            <ul>
+                <li><strong>Одиночный файл:</strong> Обычный валидный <code>.json</code> со списком тестовых вопросов по
+                    шаблону ниже.
+                </li>
+                <li><strong>ZIP-архив:</strong> Обязательно должен содержать <code>.json</code> файл описания теста и
+                    вложенную папку <code>img/</code> для медиа-контента.
+                </li>
+                <li><strong>Имена изображений:</strong> Файлы картинок связываются по правилу
+                    <code>номерВопроса.png</code>. Для одного вопроса до трех фотографий.
+                </li>
+                <li><strong>Если фотографий несколько:</strong> Называйте фотографии <code>номерВопроса_1.png</code> до
+                    трех.
+                </li>
+            </ul>
+        </div>
+
+
+        <div class="prompt-box">
+            <div class="prompt-header">
+                <div class="prompt-title">
+                    <i data-lucide="sparkles" style="color: var(--primary); width: 35px;"></i>
+                    <span>Промпт для генерации теста через AI</span>
+                </div>
+                <button class="btn btn-outline btn-copy-prompt" id="copyPromptBtn" onclick="copyAiPrompt()">
+                    <i data-lucide="copy" style="width: 13px; height: 13px;"></i>
+                    <span>Скопировать</span>
+                </button>
+            </div>
+            <div class="prompt-body">
+<pre class="prompt-pre" id="aiPromptText">Ты — высококвалифицированный парсер данных и эксперт по автоматизации. Твоя единственная задача — принимать на вход любые учебные тесты, списки вопросов или экзаменационные материалы и преобразовывать их в строго валидный JSON-документ по заданной схеме.
+
+ИСХОДНЫЕ ДАННЫЕ
+Пользователь передаст тебе текст, который может содержать:
+- Вопросы с одним вариантом ответа.
+- Вопросы с множественным выбором (несколько правильных ответов).
+- Задания на установление соответствий.
+- Открытые вопросы (где нужно вписать слово/команду самостоятельно).
+
+ПРАВИЛА ПРЕОБРАЗОВАНИЯ ФОРМАТОВ
+Ты должен адаптировать любые типы вопросов под одну из 3-х структур внутри объекта "options":
+
+1. Для вопросов с ОДНИМ правильным ответом или ОТКРЫТЫХ вопросов:
+   - "answers": [массив всех доступных вариантов] (для открытого вопроса — массив с одним правильным текстовым ответом).
+   - "correct": "строка, в точности совпадающая с правильным ответом".
+
+2. Для вопросов с МНОЖЕСТВЕННЫМ выбором:
+   - "answers": [массив всех доступных вариантов].
+   - "correctAnswers": [массив строк, которые являются правильными ответами].
+
+3. Для заданий НА СООТВЕТСТВИЕ:
+   - "choices": { "Ключ (Левая часть)": "Значение (Правая правильная часть)" }
+
+Каждый вопрос ОБЯЗАТЕЛЬНО должен содержать поле "explanation" (подробное объяснение, почему этот ответ правильный, или раскрытие логики задания). Если в исходном тексте нет объяснения, сформулируй его самостоятельно на основе контекста вопроса.
+
+СТРОГИЕ ПРАВИЛА JSON
+- Выводи ТОЛЬКО чистый код JSON. Не пиши никаких вступлений, пояснений или заключений.
+- Не оборачивай JSON в разметку markdown (не используй тройные апострофы ```json), если тебя об этом не просят отдельно. Начни ответ сразу с `{` и закончи `}`.
+- Все ключи и строковые значения должны быть в двойных кавычках.
+- Избегай висячих запятых (trailing commas) в конце массивов и объектов.
+- Поля "title" и "group" определи на основе текста (если их нет, придумай логичное название для "title" по теме теста, а в "group" укажи "00-00").
+
+ШАБЛОН ВЫХОДНОГО JSON-ДОКУМЕНТА:
+{
+  "title": "Название теста",
+  "group": "Номер группы или код",
+  "questions": [
+    {
+      "number": 1,
+      "text": "Текст первого вопроса?",
+      "options": {
+        "answers": ["Вариант A", "Вариант B", "Вариант C", "Вариант D"],
+        "correct": "Вариант B",
+        "explanation": "Подробное объяснение правильности варианта B."
+      }
+    },
+    {
+      "number": 2,
+      "text": "Текст вопроса с несколькими ответами?",
+      "options": {
+        "answers": ["Опция 1", "Опция 2", "Опция 3", "Опция 4"],
+        "correctAnswers": ["Опция 1", "Опция 3"],
+        "explanation": "Объяснение, почему подходят именно эти варианты."
+      }
+    },
+    {
+      "number": 3,
+      "text": "Текст задания на сопоставление терминов.",
+      "options": {
+        "choices": {
+          "Термин 1": "Определение 1",
+          "Термин 2": "Определение 2"
+        },
+        "explanation": "Логика связи терминов и определений."
+      }
+    }
+  ]
+}
+
+Приступай. Жди исходный текст от пользователя.
+
+Группа 22-44. Тест "Теория вероястности". Перепиши файл под шаблон выше</pre>
+            </div>
+        </div>
+
+        <script>
+            function copyAiPrompt() {
+                const promptText = document.getElementById("aiPromptText").innerText;
+
+                navigator.clipboard.writeText(promptText).then(() => {
+                    const btn = document.getElementById("copyPromptBtn");
+
+                    // Меняем состояние кнопки на успешное
+                    btn.innerHTML = '<i data-lucide="check" style="width: 13px; height: 13px;"></i> <span>Скопировано!</span>';
+                    btn.style.borderColor = 'var(--success)';
+                    btn.style.color = 'var(--success)';
+                    if (typeof lucide !== 'undefined') lucide.createIcons();
+
+                    // Возвращаем исходный вид через 2 секунды
+                    setTimeout(() => {
+                        btn.innerHTML = '<i data-lucide="copy" style="width: 13px; height: 13px;"></i> <span>Скопировать промпт</span>';
+                        btn.style.borderColor = '';
+                        btn.style.color = '';
+                        if (typeof lucide !== 'undefined') lucide.createIcons();
+                    }, 2000);
+                }).catch(err => {
+                    console.error('Ошибка при копировании: ', err);
+                });
+            }
+        </script>
+    </div>
+{% endblock %}
+
+{% block extra_script %}
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const lastQuizSlug = localStorage.getItem('last_quiz_slug');
+            const lastQuizTitle = localStorage.getItem('last_quiz_title');
+
+            if (lastQuizSlug && lastQuizTitle) {
+                const lastQuizBox = document.getElementById('lastQuizBox');
+                const lastQuizTitleEl = document.getElementById('lastQuizTitle');
+                const lastQuizLink = document.getElementById('lastQuizLink');
+
+                lastQuizTitleEl.textContent = lastQuizTitle;
+                lastQuizLink.href = `/quiz/${lastQuizSlug}/`;
+                lastQuizBox.style.display = 'flex';
+            }
+
+            const fileInput = document.getElementById('test_file');
+            const dropZone = document.getElementById('dropZone');
+            const dropZonePrompt = document.getElementById('dropZonePrompt');
+
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropZone.addEventListener(eventName, (e) => {
+                    e.preventDefault();
+                    dropZone.classList.add('drag-over');
+                }, false);
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropZone.addEventListener(eventName, (e) => {
+                    e.preventDefault();
+                    dropZone.classList.remove('drag-over');
+                }, false);
+            });
+
+            fileInput.addEventListener('change', function () {
+                if (this.files && this.files.length > 0) {
+                    const file = this.files[0];
+                    const isZip = file.name.endsWith('.zip');
+                    const iconName = isZip ? 'file-archive' : 'file-json';
+
+                    dropZonePrompt.innerHTML = `
+                    <div class="selected-file-badge">
+                        <i data-lucide="${iconName}" style="color: var(--primary); width: 18px; height: 18px;" stroke-width="2.5"></i>
+                        <span>${file.name}</span>
+                    </div>
+                    <p class="file-info-text" style="margin-top: 12px;">Файл успешно подготовлен к отправке. Нажмите кнопку ниже.</p>
+                `;
+
+                    if (window.lucide) {
+                        lucide.createIcons();
+                    }
+                }
+            });
+        });
+    </script>
+{% endblock %}
+
+Тоже в идеале: сделать рабочим drug-n-drop
+
+разделить стили и вынести по возможности стили
+и .js
