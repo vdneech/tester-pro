@@ -23,6 +23,7 @@ services:
       - static:/app/tester/static:ro
       - media:/app/tester/media:ro
       - /etc/letsencrypt:/etc/letsencrypt:ro
+      - /var/www/certbot:/var/www/certbot:ro
     depends_on:
       - web
 
