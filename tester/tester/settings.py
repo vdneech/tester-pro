@@ -13,8 +13,8 @@ MAIN_DOMAIN = os.environ.get('MAIN_DOMAIN')
 
 ALLOWED_HOSTS = [
     'django',
-    f'https://{MAIN_DOMAIN}',
-    f'https://www.{MAIN_DOMAIN}',
+    f'{MAIN_DOMAIN}',
+    f'www.{MAIN_DOMAIN}',
     'localhost',
 ]
 
