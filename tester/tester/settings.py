@@ -12,7 +12,7 @@ DEBUG = os.environ.get('DEBUG', 'True') == "True"
 MAIN_DOMAIN = os.environ.get('MAIN_DOMAIN')
 
 ALLOWED_HOSTS = [
-    'django',
+    'web',
     f'{MAIN_DOMAIN}',
     f'www.{MAIN_DOMAIN}',
     'localhost',
